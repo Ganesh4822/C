@@ -87,17 +87,22 @@ typedef struct VectorofAllVectors
 }VectorofAllVectors;
 
 VectorofAllVectors* initialize();
+void Destroy(VectorofAllVectors** vec);
 Triagle_vector* createTriangleVector();
-
+//File Routines
 size_t getline1(FILE *stream, char *buf, size_t size);
-
-char** TokeniseStringAndStoreIntoArray(char* line,int* size, int count);
-
+char** TokeniseStringAndStoreIntoArray(char* line,int* size,char* token);
 //Vector Routines
 void FillCoOrdinatorVector(Co_ordinate_vector* vec , char** StringArray);
 void FillTextureVector(Texture_vector* vec , char** StringArray);
 void FillNormalVector(Normal_vector* vec , char** StringArray);
-
 void FillAppropriateVector(VectorofAllVectors* vec, char** StringArray);
-
 void ReadMeshFileAndFillTraingleVector(VectorofAllVectors* vec,FILE* file);
+void PrintCoordinateWithIndex(Co_ordinate_vector* vec,int index);
+void PrintTriangle(VectorofAllVectors* vec , FILE* fp);
+void PrintTextureWithIndex(Texture_vector* vec, int index);
+
+//Helper
+void destroyCoordinateVector(Co_ordinate_vector* vec);
+void destroyTextureVector(Texture_vector* vec);
+void destroyNormalVector(Normal_vector* vec);

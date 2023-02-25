@@ -106,7 +106,7 @@ void FillCoOrdinatorVector(Co_ordinate_vector* vec , char** StringArray)
     vec->size = vec->size + 1;
     //printf("Size :: %d\n",vec->size);
     vec->coordinate_array[vec->size - 1] = (Co_ordinator*)malloc(sizeof(Co_ordinator));
-    printf("%f, %f , %f \n",atof(StringArray[1]), atof(StringArray[2]),atof(StringArray[3]));
+    //printf("%f, %f , %f \n",atof(StringArray[1]), atof(StringArray[2]),atof(StringArray[3]));
     vec->coordinate_array[vec->size - 1]->x = atof(StringArray[1]);
     vec->coordinate_array[vec->size - 1]->y = atof(StringArray[2]);
     vec->coordinate_array[vec->size - 1]->z = atof(StringArray[3]);
@@ -172,6 +172,10 @@ void FillAppropriateVector(VectorofAllVectors* vec, char** StringArray)
     {
         FillNormalVector(vec->norm_vec, StringArray);
     }
+     else
+    {
+        return;
+    } 
 }
 int getline1(FILE *stream, char *buf, size_t size)
 {
@@ -186,23 +190,23 @@ int getline1(FILE *stream, char *buf, size_t size)
     return count;
 }
 
-char** TokeniseStringAndStoreIntoArray(char* line,int* size,int count)
+char** TokeniseStringAndStoreIntoArray(char* line,int* size,char* token)
 {   
     
     char** array = NULL;
-    if(count > 0)
-    {
-        char *p = strtok (line, " ");
-        *size = 0;
-        while(p != NULL)
-        {   
-            (*size)++;
-            array = (char**)realloc(array,sizeof(char*)*  (*size));
-            array[*size - 1]  = (char*)malloc(strlen(p));
-            strcpy(array[*size - 1],p);
-            p = strtok(NULL," ");
-        }
+    *size = 0;
+    
+    char *p = strtok (line, token);
+    
+    while(p != NULL)
+    {   
+        (*size)++;
+        array = (char**)realloc(array,sizeof(char*)*  (*size));
+        array[*size - 1]  = (char*)malloc(strlen(p));
+        strcpy(array[*size - 1],p);
+        p = strtok(NULL,token);
     }
+    
     
     //printf("Line read succesfully\n");
     return array;
@@ -239,14 +243,75 @@ void Printc(Texture_vector* vec)
     }
 }
 
+
+void PrintCoordinateWithIndex(Co_ordinate_vector* vec,int index)
+{
+    printf("x :: %f, y :: %f , z :: %f \n", vec->coordinate_array[index - 1]->x
+    ,vec->coordinate_array[index - 1]->y,vec->coordinate_array[index - 1]->z);
+}
+
+void PrintTextureWithIndex(Texture_vector* vec, int index)
+{
+    printf("u1 :: %f, u2 :: %f \n",vec->texture_array[index-1]->u1 , vec->texture_array[index-1]->u2);
+}
+
+void PrintVectorWithIndex(Normal_vector* vec , int index)
+{
+    printf("nx :: %f, ny :: %f, nz :: %f\n", vec->normal_array[index-1]->nx,
+    vec->normal_array[index-1]->ny, vec->normal_array[index-1]->nz);
+}
+
+void PrintTriangle(VectorofAllVectors* vec , FILE* fp)
+{
+    char line[MAX_LINE_LENGTH];
+    int count = 0;
+    int size = 0;
+    char** stringArray = NULL;
+    char** triangleArray = NULL;
+    int trianlgeCount = 0;
+    int size2 = 0;
+    while((count = getline1(fp,line,MAX_LINE_LENGTH)) > 0)
+    {
+        
+        stringArray = TokeniseStringAndStoreIntoArray(line,&size," ");
+        if(strcmp(stringArray[0],"f")==0)
+        {
+            printf("Traingle number :: %d->\n",++trianlgeCount);
+            int i;
+            for(i = 1 ; i < size ; i++)
+            {
+                triangleArray = TokeniseStringAndStoreIntoArray(stringArray[i],&size2,"/");
+                printf("Coordinate No :: %d->\n",i);
+                PrintCoordinateWithIndex(vec->coord_vec,atoi(triangleArray[0]));
+                PrintTextureWithIndex(vec->tex_vec,atoi(triangleArray[1]));
+                PrintVectorWithIndex(vec->norm_vec,atoi(triangleArray[2]));
+
+            }
+            /*
+                todo
+                for(int i = 1 ; i < stringArray.size() ;i++)
+                {
+                    triangleArray = TokeniseStringAndStoreIntoArray(stringArray[i],&size,count,"/")  
+                    print(vec->CoordinateVec->coordinateArray[atoi(triangleArray[0]) + 1]);
+                    print(vec->NormalVec->NormalArray[atoi(triangleArray[1]) + 1]);
+                    printf(vec->TextureVec->textureArray[atoi(triangleArray[i]) + 1]);
+                }
+            */
+        }
+        
+    }
+}
+
+
 int main()
 {
    char line[MAX_LINE_LENGTH];
-   FILE *inFile = fopen("MonkeyHeadFinal.txt", "r");
+   FILE *inFile = fopen("MonkeyHeadFinal.OBJ", "r");
    int count = 0 ;
    char** array;
    int i; 
    int size;
+   int trianlgeCount = 0;
 //    Co_ordinate_vector* vec = (Co_ordinate_vector*)malloc(sizeof(Co_ordinate_vector));
 //    if(vec == NULL)
 //    {
@@ -259,17 +324,28 @@ int main()
    while ((count = getline1(inFile, line, MAX_LINE_LENGTH)) != -1) {
         //printf("The line gotten was \"%s\" and was %d chars long.\n", line, count);
         //printf("count = %d\n",count);
-        array = TokeniseStringAndStoreIntoArray(line,&size,count);
+        array = TokeniseStringAndStoreIntoArray(line,&size," ");
         FillAppropriateVector(newvec,array);
         
         // for(i = 0 ; i < 3 ; i++)
         // {
         //     printf("%s\t", array[i]);
+        // // }
+        // if(strcmp(array[0],"f")==0)
+        // {
+        //      printf("Traingle number :: %d\n",++trianlgeCount);
         // }
-        if(array != NULL)
+        int i = 0;
+        if(array!= NULL)
         {
+            for(i = 0 ; i < size ;i++)
+            {
+                free(array[i]);
+            }
             free(array);
         }
+        
+
         
     
     }
@@ -281,4 +357,13 @@ int main()
     printf("size of N vector = %d\n",newvec->norm_vec->size);
     printf("size of T vector = %d\n",newvec->tex_vec->size);
     printf("count = %d\n",count);
+    inFile = fopen("MonkeyHeadFinal.OBJ", "r");
+    //Reassignment of FilePointer is Necessory Heere
+    
+    PrintTriangle(newvec, inFile);
+    printf("SUCCESS\n");
 }
+/*
+client
+
+*/
